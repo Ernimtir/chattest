@@ -11,6 +11,8 @@ from google.appengine.dist import use_library
 use_library('django', '1.2')
 from google.appengine.ext.webapp import template
 
+# this is a test
+
 def render(template_file, template_values):
 	logging.info(os.path.join(os.path.dirname(__file__), 'templates', template_file))
 	return template.render(				# render a template
@@ -23,7 +25,7 @@ def render(template_file, template_values):
 class Player(db.Model):
 #	user = db.UserProperty(auto_current_user_add=True)
 	nick = db.StringProperty()
-	
+
 def get_user():
 	# returns the current user's site_user entity from the datastore
 	# or creates it if one doesn't exist yet
@@ -58,17 +60,17 @@ class ChatEntry(db.Model):
 class MainHandler(webapp.RequestHandler):
     def get(self, room):
 		template_values = {}
-		
+
 		chatq = ChatEntry.all()
 		chatq.filter("room =", room)
 		chatq.order("timestamp")
 		chatlog = '\n'.join([entry.text for entry in chatq])
-		
+
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog
-		
+
 		self.response.out.write(render('chat.html', template_values))
-        
+
     def post(self, room):
 		entry = ChatEntry()
 		entry.text = self.request.get("message")
