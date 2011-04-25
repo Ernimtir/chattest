@@ -1,12 +1,12 @@
 <html>
 	<head>
 		<title>Chat Test - {{ room }} </title>
+		<script type="text/javascript" src="/_ah/channel/jsapi"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
 	</head>
 	<body>
 		<textarea rows="24" readonly="readonly" style="width:100%; border: 1px solid black;" >{{ chatlog }}</textarea>
-		<form action="/{{ room }}" method="post">
-			<input type="text" maxlength="500" id="message" name="message" style="float:left; width:90%; border: 1px solid black;"/>
-			<input type="submit" value="send" style="float:right; width:10%; border: 1px solid black;" />
-		</form>
+		<input type="text" maxlength="500" id="message" name="message" style="float:left; width:90%; border: 1px solid black;"/>
+		<input type="submit" value="send" style="float:right; width:10%; border: 1px solid black;" />
 	</body>
 </html>

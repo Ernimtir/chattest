@@ -2,14 +2,16 @@
 
 import os
 import re
+import random
 import logging
 from google.appengine.ext import db
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import users
-from google.appengine.dist import use_library
-use_library('django', '1.2')
+from google.appengine.ext import webapp
+from google.appengine.api import channel
+#from google.appengine.dist import use_library
+#use_library('django', '1.2')
 from google.appengine.ext.webapp import template
+from google.appengine.ext.webapp.util import run_wsgi_app
 
 def render(template_file, template_values):
 	logging.info(os.path.join(os.path.dirname(__file__), 'templates', template_file))
@@ -54,7 +56,35 @@ class ChatEntry(db.Model):
 #	author = db.ReferenceProperty(reference_class=Player, collection_name="postings")
 #	author = db.StringProperty()
 	room = db.StringProperty()
-
+	
+def roller(matchobj):
+	num_dice = int(matchobj.group(1))
+	rolls = []
+	successes = 0
+	botch = False
+	for die in xrange(0, num_dice):
+		rolls.append(random.randint(1,10))
+		if rolls[die] >= 7:
+			successes += 1
+			if rolls[die] == 10 and matchobj.group(2) != '.dmg':
+				successes += 1
+		elif rolls[die] == 1:
+			botch = True
+	rolls.sort()
+	rolls = ', '.join(str(roll) for roll in rolls)
+	if botch and successes == 0:
+		result = 'BOTCH! )'
+	elif successes == 1:
+		result = '1 success )'
+	else:
+		result = str(successes) + ' successes )'
+	return ''.join([
+			'([',
+			rolls,
+			'] = ',
+			result
+		 ])
+	
 class MainHandler(webapp.RequestHandler):
     def get(self, room):
 		template_values = {}
@@ -72,6 +102,7 @@ class MainHandler(webapp.RequestHandler):
     def post(self, room):
 		entry = ChatEntry()
 		entry.text = self.request.get("message")
+		entry.text = re.sub(r'\[(\d+)d(\.dmg)?\]', roller, entry.text)
 		if entry.text:
 			m = re.match(r'^/(.*?)\s+(.+)', entry.text)
 			if m:
