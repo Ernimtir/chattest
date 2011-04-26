@@ -1,7 +1,7 @@
 $(document).ready(function(){
 	$("#msg").focus();
 	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
-	
+
 	var socket = new goog.appengine.Channel(token).open();
 	socket.onopen = function(){
 		$("#send").removeAttr("disabled");
@@ -16,20 +16,22 @@ $(document).ready(function(){
 	socket.onclose = function(){
 		$("#chatlog").append("\n--INFO-- socket closed\n--INFO-- reload page to connect\n");
 	};
-	
-	$("#send").click(function(){
-		var path = "/" + room + "?msg=" + $("#msg").val();
-		var xhr = new XMLHttpRequest();
-		xhr.open('POST', path, true);
-		xhr.send();
+
+	$("#form1").submit(function(){
+		var path = "/" + room;
+		var message = $(this).serialize();
+		alert("sending " + message);
+		$.ajax({
+			type: "POST",
+			url: path,
+			data: message,
+			success: function() {
+				alert("sent "+ message);
+			}
+
+		});
 		$("#msg").attr('value','');
 		$("#msg").focus();
-	});
-	
-	$("#msg").keydown(function(event){
-		if (event.keyCode == '13') {
-			event.preventDefault();
-			$("#send").click();
-		}
+		return false;
 	});
 });
