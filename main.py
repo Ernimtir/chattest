@@ -21,6 +21,7 @@ def render(template_file, template_values):
 		template_values)				# values to pass to renderer
 
 class Player(db.Model):
+	user = db.UserProperty(auto_current_user_add=True)
 	nick = db.StringProperty()
 	room = db.StringProperty()
 
@@ -83,8 +84,9 @@ def roller(matchobj):
 	
 class MainHandler(webapp.RequestHandler):
     def get(self, room):
-		get_user().room = room;
-		get_user().put()
+		user = get_user()
+		user.room = room;
+		user.put()
 		
 		template_values = {}
 
@@ -95,7 +97,7 @@ class MainHandler(webapp.RequestHandler):
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog		
-		template_values['token'] = channel.create_channel(''.join([room, users.get_current_user().user_id()]))
+		template_values['token'] = channel.create_channel(room + users.get_current_user().user_id())
 
 		self.response.out.write(render('chat.html', template_values))
 
@@ -110,7 +112,6 @@ class MainHandler(webapp.RequestHandler):
 					user = get_user()
 					user.nick = m.group(2)
 					user.put()
-					self.redirect('/'+room)
 					return
 				elif m.group(1) == 'ooc':
 					entry.text = ''.join([get_user().nick, ': (( ', m.group(2), ' ))'])
@@ -123,7 +124,7 @@ class MainHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(room + users.get_current_user().user_id(), entry.text);
+			channel.send_message(room + player.user.user_id(), entry.text);
 
 def main():
     app = webapp.WSGIApplication(
