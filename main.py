@@ -12,7 +12,6 @@ from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 def render(template_file, template_values):
-	logging.info(os.path.join(os.path.dirname(__file__), 'templates', template_file))
 	return template.render(				# render a template
 		os.path.join(					# system specific path joiner
 			os.path.dirname(__file__),	# path to this python file
@@ -101,7 +100,6 @@ class MainHandler(webapp.RequestHandler):
 		chatlog = '\n'.join([entry.text for entry in chatquery])
 
 		token = channel.create_channel(room + users.get_current_user().user_id())
-		logging.info('channel created: ' + token)
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog		
@@ -131,9 +129,7 @@ class MainHandler(webapp.RequestHandler):
 			entry.put()
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
-		logging.info('sending msg to room: ' + room)
 		for player in roomquery:
-			logging.info('\tsending msg to player: ' + player.user.user_id())
 			channel.send_message(room + player.user.user_id(), entry.text);
 
 def main():
