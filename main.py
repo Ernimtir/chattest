@@ -24,6 +24,7 @@ class Player(db.Model):
 	user = db.UserProperty(auto_current_user_add=True)
 	nick = db.StringProperty()
 	room = db.StringProperty()
+	token = db.StringProperty()
 
 def get_user():
 	# returns the current user's site_user entity from the datastore
@@ -84,6 +85,10 @@ def roller(matchobj):
 	
 class MainHandler(webapp.RequestHandler):
     def get(self, room):
+		if room == 'favicon.ico':
+			# requests to this uri were logging players into
+			# the 'favicon.ico' room, so abort on that case
+			return
 		user = get_user()
 		user.room = room;
 		user.put()
@@ -91,19 +96,22 @@ class MainHandler(webapp.RequestHandler):
 		template_values = {}
 
 		chatquery = ChatEntry.all()
-		chatquery.filter("room =", room)
-		chatquery.order("timestamp")
+		chatquery.filter('room =', room)
+		chatquery.order('timestamp')
 		chatlog = '\n'.join([entry.text for entry in chatquery])
+
+		token = channel.create_channel(room + users.get_current_user().user_id())
+		logging.info('channel created: ' + token)
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog		
-		template_values['token'] = channel.create_channel(room + users.get_current_user().user_id())
+		template_values['token'] = token
 
 		self.response.out.write(render('chat.html', template_values))
 
     def post(self, room):
 		entry = ChatEntry()
-		entry.text = self.request.get("msg")
+		entry.text = self.request.get('msg')
 		entry.text = re.sub(r'\[(\d+)d(\.dmg)?\]', roller, entry.text)
 		if entry.text:
 			m = re.match(r'^/(.*?)\s+(.+)', entry.text)
@@ -123,7 +131,9 @@ class MainHandler(webapp.RequestHandler):
 			entry.put()
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
+		logging.info('sending msg to room: ' + room)
 		for player in roomquery:
+			logging.info('\tsending msg to player: ' + player.user.user_id())
 			channel.send_message(room + player.user.user_id(), entry.text);
 
 def main():
