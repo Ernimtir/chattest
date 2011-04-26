@@ -50,7 +50,7 @@ def get_user():
 		return False
 
 class ChatEntry(db.Model):
-	text = db.StringProperty()
+	text = db.TextProperty()
 	timestamp = db.DateTimeProperty(auto_now_add=True)
 	room = db.StringProperty()
 	
@@ -120,7 +120,7 @@ class MainHandler(webapp.RequestHandler):
 					user.put()
 					return
 				elif m.group(1) == 'ooc':
-					entry.text = ''.join([get_user().nick, ': (( ', m.group(2), ' ))'])
+					entry.text = ''.join([get_user().user.nickname(), ': (( ', m.group(2), ' ))'])
 				elif m.group(1) == 'me' or 'em':
 					entry.text = ' '.join([get_user().nick, m.group(2)])
 			else:
