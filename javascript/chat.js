@@ -20,15 +20,10 @@ $(document).ready(function(){
 	$("#form1").submit(function(){
 		var path = "/" + room;
 		var message = $(this).serialize();
-		alert("sending " + message);
 		$.ajax({
 			type: "POST",
 			url: path,
-			data: message,
-			success: function() {
-				alert("sent "+ message);
-			}
-
+			data: message
 		});
 		$("#msg").attr('value','');
 		$("#msg").focus();
