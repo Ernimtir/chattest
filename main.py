@@ -8,12 +8,8 @@ from google.appengine.ext import db
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.api import channel
-#from google.appengine.dist import use_library
-#use_library('django', '1.2')
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp.util import run_wsgi_app
-
-# this is a test
 
 def render(template_file, template_values):
 	logging.info(os.path.join(os.path.dirname(__file__), 'templates', template_file))
@@ -25,8 +21,8 @@ def render(template_file, template_values):
 		template_values)				# values to pass to renderer
 
 class Player(db.Model):
-#	user = db.UserProperty(auto_current_user_add=True)
 	nick = db.StringProperty()
+	room = db.StringProperty()
 
 def get_user():
 	# returns the current user's site_user entity from the datastore
@@ -55,8 +51,6 @@ def get_user():
 class ChatEntry(db.Model):
 	text = db.StringProperty()
 	timestamp = db.DateTimeProperty(auto_now_add=True)
-#	author = db.ReferenceProperty(reference_class=Player, collection_name="postings")
-#	author = db.StringProperty()
 	room = db.StringProperty()
 	
 def roller(matchobj):
@@ -89,21 +83,25 @@ def roller(matchobj):
 	
 class MainHandler(webapp.RequestHandler):
     def get(self, room):
+		get_user().room = room;
+		get_user().put()
+		
 		template_values = {}
 
-		chatq = ChatEntry.all()
-		chatq.filter("room =", room)
-		chatq.order("timestamp")
-		chatlog = '\n'.join([entry.text for entry in chatq])
+		chatquery = ChatEntry.all()
+		chatquery.filter("room =", room)
+		chatquery.order("timestamp")
+		chatlog = '\n'.join([entry.text for entry in chatquery])
 
 		template_values['room'] = room
-		template_values['chatlog'] = chatlog
+		template_values['chatlog'] = chatlog		
+		template_values['token'] = channel.create_channel(''.join([room, users.get_current_user().user_id()]))
 
 		self.response.out.write(render('chat.html', template_values))
 
     def post(self, room):
 		entry = ChatEntry()
-		entry.text = self.request.get("message")
+		entry.text = self.request.get("msg")
 		entry.text = re.sub(r'\[(\d+)d(\.dmg)?\]', roller, entry.text)
 		if entry.text:
 			m = re.match(r'^/(.*?)\s+(.+)', entry.text)
@@ -122,7 +120,10 @@ class MainHandler(webapp.RequestHandler):
 				entry.text = ''.join([get_user().nick, ': ', entry.text])
 			entry.room = room
 			entry.put()
-		self.redirect('/'+room)
+		roomquery = Player.all()
+		roomquery.filter('room =', room)
+		for player in roomquery:
+			channel.send_message(room + users.get_current_user().user_id(), entry.text);
 
 def main():
     app = webapp.WSGIApplication(
