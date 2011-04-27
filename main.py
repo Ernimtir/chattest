@@ -134,7 +134,6 @@ class MainHandler(webapp.RequestHandler):
 					user.nick = entry.text
 					user.put()
 					return
-<<<<<<< HEAD
 				elif command == 'ooc':
 					entry.text = ''.join(['(( ', entry.text, ' ))'])
 
@@ -151,8 +150,6 @@ class MainHandler(webapp.RequestHandler):
 						stylestring = stylestring + k + ": " + v +";"
 					stylestring = stylestring + "}"
 					entry.text = ''.join([get_user().nick, ': <span style="', stylestring, '">', entry.text, "</span>"])
-=======
->>>>>>> be244a3df440de0dba95c00de047a812d8201145
 			entry.room = room
 			entry.text
 			entry.put()
