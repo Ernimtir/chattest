@@ -4,6 +4,7 @@ import os
 import re
 import random
 import logging
+import json
 from google.appengine.ext import db
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -24,6 +25,7 @@ class Player(db.Model):
 	nick = db.StringProperty()
 	room = db.StringProperty()
 	token = db.StringProperty()
+	style = db.StringProperty()
 
 def get_user():
 	# returns the current user's site_user entity from the datastore
@@ -53,7 +55,13 @@ class ChatEntry(db.Model):
 	text = db.StringProperty()
 	timestamp = db.DateTimeProperty(auto_now_add=True)
 	room = db.StringProperty()
-	
+
+def isHex(checkstring):
+	for a in checkstring:
+		if string.hexdigits.find(a) <0:
+			return false
+	return true
+
 def roller(matchobj):
 	num_dice = int(matchobj.group(1))
 	rolls = []
@@ -81,7 +89,7 @@ def roller(matchobj):
 			'] = ',
 			result
 		 ])
-	
+
 class MainHandler(webapp.RequestHandler):
     def get(self, room):
 		if room == 'favicon.ico':
@@ -91,7 +99,7 @@ class MainHandler(webapp.RequestHandler):
 		user = get_user()
 		user.room = room;
 		user.put()
-		
+
 		template_values = {}
 
 		chatquery = ChatEntry.all()
@@ -102,31 +110,50 @@ class MainHandler(webapp.RequestHandler):
 		token = channel.create_channel(room + users.get_current_user().user_id())
 
 		template_values['room'] = room
-		template_values['chatlog'] = chatlog		
+		template_values['chatlog'] = chatlog
 		template_values['token'] = token
 
 		self.response.out.write(render('chat.html', template_values))
 
     def post(self, room):
+
 		entry = ChatEntry()
 		entry.text = self.request.get('msg')
 		entry.text = re.sub(r'\[(\d+)d(\.dmg)?\]', roller, entry.text)
-		if entry.text:
-			m = re.match(r'^/(.*?)\s+(.+)', entry.text)
-			if m:
-				if m.group(1) == 'nick':
-					user = get_user()
-					user.nick = m.group(2)
+
+		user = get_user()
+		decoder = json.JSONDecoder()
+		style = decoder.decode(user.style)
+
+		if entry.text[0] == '/':
+			args = entry.text.split(None,1)
+			entry.text = args[1]
+			if args[0]:
+				command = string.lstrip(args[0],'/')
+				if command == 'nick':
+					user.nick = entry.text
 					user.put()
 					return
-				elif m.group(1) == 'ooc':
-					entry.text = ''.join([get_user().nick, ': (( ', m.group(2), ' ))'])
-				elif m.group(1) == 'me' or 'em':
-					entry.text = ' '.join([get_user().nick, m.group(2)])
-			else:
-				entry.text = ''.join([get_user().nick, ': ', entry.text])
+				elif command == 'ooc':
+					entry.text = ''.join(['(( ', entry.text, ' ))'])
+
+				elif command == 'color'
+					if (str.len(entry.text) == 6 or str.len(entry.text) == 3) and isHex(entry.text):
+						style[color] = entry.text
+
+				if command == 'me' or 'em':
+					entry.text = ' '.join([get_user().nick, entry.text)
+				else
+
+					stylestring = "{"
+					for k,v in style.items():
+						stylestring = stylestring + k + ": " + v +";"
+					stylestring = stylestring + "}"
+					entry.text = ''.join([get_user().nick, ': <span style="', stylestring, '">', entry.text, "</span>"])
 			entry.room = room
+			entry.text
 			entry.put()
+			user.put()
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:

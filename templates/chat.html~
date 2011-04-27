@@ -1,0 +1,41 @@
+<html>
+	<head>
+		<title>Chat Test - {{ room }} </title>
+		<script type="text/javascript" src="/_ah/channel/jsapi"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function(){
+				$("#msg").focus();
+				
+				var socket = new goog.appengine.Channel("{{ token }}").open();
+				socket.onopen = function(){
+					$("#send").removeAttr("disabled");
+				};
+				socket.onmessage = function(msg){
+					alert('blag');
+				};
+				socket.onerror = function(){
+					$("#log").append("\n--ERROR-- error in socket\n");
+				};
+				socket.onclose = function(){
+					$("#log").append("\n--INFO-- socket closed\n--INFO-- reload page to connect\n");
+				};
+				$("#form1").submit(function(){
+					var path = "/{{ room }}?msg=" + $("#msg").val();
+					var xhr = new XMLHttpRequest();
+					xhr.open('POST', path, true);
+					xhr.send();
+					$("#msg").attr('value','');
+					$("#msg").focus();
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<textarea rows="24" id="log" readonly="readonly" style="width:100%; border: 1px solid black;" >{{ chatlog }}</textarea>
+		<form id="form1">
+			<input type="text" id="msg" maxlength="500" style="float:left; width:90%; border: 1px solid black;"/>
+			<input type="submit" id="send" value="send" disabled="disabled" style="float:right; width:10%; border: 1px solid black;" />
+		</form>
+	</body>
+</html>
