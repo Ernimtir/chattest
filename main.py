@@ -85,6 +85,14 @@ def NRoller(matchobj):
 			end
 		])
 		
+# content is a dictionary
+def buildJSONMessage(type, content):
+	builtcontent = '{'
+	for k,v in content:
+		builtcontent = builtcontent+k+':"'+v+'",'
+	builtcontent = builtcontent.rstrip(',') + "}"
+	message = '{type:'+type+', content:'+builtcontent+'}'
+	return message
 
 def ExRoller(matchobj):
 	num_dice = int(matchobj.group(1))
@@ -114,48 +122,48 @@ def ExRoller(matchobj):
 			result
 		 ])
 
-class HBHandler(webapp.RequestHandler):
-	players = {}
-	m = hashlib.sha1()
-	
-	def __init__(self):
-		hbMonitor()
-		players = {}
-		
-	hbMonitor(self):
-		while True:
-			time.sleep(30)
-			if Player.all().filter('room !=', '').get(): # if nobody's logged in, don't give a shit
-				currentTime = int(time.time())
-				known = Player.all()
-				for user in known
-					room = user.room
-					m.update(user.user_id()+user.room)
-					diff = currentTime - players[m.hexdigest()]
-					if diff > 30:
-						user.room = ''
-						user.put()
-						roomquery = Player.all()
-						roomquery.filter('room =', room)
-						for player in roomquery:
-							channel.send_message(room + player.user.user_id(), "{type:listremove content:{player:"+user.nickname()+"}}"); # dummy text, replace with JSON
-		return
-	
-	def get(self, room):
+class CHandler(webapp.RequestHandler):
+	def get(self):
 		return
 		
-	def post(self, room):
-		return
-
-	
-	# called by JS heart on client side  (interval < 30s)  to maintain logged in status.
-	def post(self, room):
+	def post(self):
+		client_id = self.request.get('from')
+		client = client_id.split(None,1)
+		room = client[0]
+		nickname = client[1]
 		user = get_user()
-		timestamp = int(time.time())
-		m.update(user.user_id()+user.room)
-		with lock: #avoid concurrency problems that might arise
-			players[m.hexdigest()] = timestamp
-		return
+		user.room = room;
+		user.put()
+		content = dict()
+		content['name'] = nickname
+		roomquery = Player.all()
+		roomquery.filter('room =', room)
+		for player in roomquery:
+			channel.send_message(room +" "+player.user.nickname(), 
+				buildJSONMessage('connect', content))
+
+class DCHandler(webapp.RequestHandler):
+
+	def get(self):
+		return # f right off
+
+	def post(self):
+		client_id = self.request.get('from')
+		client = client_id.split(None,1)
+		room = client[0]
+		nickname = client[1]
+		user = get_user()
+		user.room = '';
+		user.put()
+		content = dict()
+		content['name'] = nickname
+		roomquery = Player.all()
+		roomquery.filter('room =', room)
+		for player in roomquery:
+			channel.send_message(room +" "+player.user.nickname(), 
+				buildJSONMessage('disconnect', content))
+		
+		
 		
 		
 
@@ -165,9 +173,6 @@ class MainHandler(webapp.RequestHandler):
 			# requests to this uri were logging players into
 			# the 'favicon.ico' room, so abort on that case
 			return
-		user = get_user()
-		user.room = room;
-		user.put()
 
 		template_values = {}
 
@@ -186,7 +191,7 @@ class MainHandler(webapp.RequestHandler):
 
     def post(self, room):
 
-		entry = ChatEntry()
+		
 		message = self.request.get('msg')
 		user = get_user()
 		
@@ -194,62 +199,81 @@ class MainHandler(webapp.RequestHandler):
 		encoder = json.JSONEncoder()
 		
 		msgJSON = decoder(message)
-		
+		response = ''
+		content = dict()
 		if msgJSON[type] == "chat":
 			style = decoder.decode(user.style)
+			entry = ChatEntry()
 			
-			entry.text = "" #pull message if needed
+			entry.text = msgJSON[content][text] #pull message
 			entry.text = re.sub(r'\[(\d+)d(\.dmg)?\]', ExRoller, entry.text)
 			entry.text = re.sub(r'\[(\d+)d(\d+)t?\]', NRoller, entry.text)
-	
+			
+			stylestring = "{"
+						for k,v in style.items():
+							stylestring = stylestring+": "+v+"; "
+						stylestring = stylestring + "}"
+			
 			if entry.text[0] == '/':
 				msg = entry.text.split(None,1)
 				entry.text = msg[1]
-				if words[0]:
+				if msg[0]:
 					command = string.lstrip(msg[0],'/')
 					if command == 'nick':
 						user.nick = entry.text
+						content["alert"] = 'Nick changed to: '+entry.text+'.'
+						channel.send_message(room + user.user_id(), 
+								buildJSONMessage("system",content))
 						user.put()
 						return
-					elif command == 'asem' or command = "asme":
-						msg = entry.text.split(None,1)
-						entry.text = msg[1]
-						entry.text = '*'.join([msg[1], entry.text])
+					elif command == 'asem' or command == "asme":
+						entry.text = '*'+entry.text
 					elif command == 'as':
 						msg = entry.text.split(None,1)
-						entry.text = msg[1]
-						entry.text = ''.join([msg[1], ": ", entry.text])
+						entry.text = msg[0]+": "+msg[1]
 					elif command == 'coinflip' or command =='cf':
 						if (random.randint(0,1)):
 							result = heads
 						else: 
 							result = tails
-							entry.text = '*'.join(['<span style="', stylestring, '"> ', get_user().nick, " flipped " , result, ".</span>"])
+						entry.text = '*'+'<span style="'+stylestring+'"> '+get_user().nick+" flipped "+result+".</span>"
 					elif command == 'ooc':
-						entry.text = ''.join([get_user().user.nickname(), ': (( ', entry.text, ' ))'])
+						entry.text = get_user().user.nickname()+': (( '+entry.text+' ))'
 					elif command == 'color':
 						if (str.len(entry.text) == 6 or str.len(entry.text) == 3) and isHex(entry.text):
 							style[color] = entry.text
 							user.style = encoder.encode(style)
+							content["alert"] = 'Color changed to: '+entry.text
+							channel.send_message(room + user.user_id(), 
+								buildJSONMessage("system", content))
+							return
+						else:
+						content["alert"] = "Invalid color code: "+entry.text
+							channel.send_message(room + user.user_id(), 
+								buildJSONMessage("system", content))
+							return
 					elif command == 'me' or 'em':
-						entry.text = '*'.join(['<span style="', stylestring, '"> ', get_user().nick, entry.text, "</span>"])
+						entry.text = '*<span style="'+stylestring+'"> '+get_user().nick+entry.text+"</span>"
 					else:
-						stylestring = "{"
-						for k,v in style.items():
-							stylestring = stylestring + k + ": " + v +";"
-						stylestring = stylestring + "}"
-						entry.text = '<span class="system">Bad command in: <p>'.join([entry.text, '</p></span>'])
-				entry.room = room
-				entry.text
-				entry.put()
-				user.put()
+					content["alert"] = "Bad command in: "+entry.text
+						channel.send_message(room + user.user_id(), 
+							buildJSONMessage("system", content))
+						return
+				
+			else:
+				entry.text = entry.text.join(['<span style="',stylestring,'"> ',get_user.nick,": ",entry.text])
+			entry.room = room
+			content["text"] = entry.text
+			response = buildJSONMessage("chat", content)
+			entry.put()
+			user.put()
 		elif msgJSON[type] == "system":
 			# nothing here yet
 		else return # Bad data
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(room + player.user.user_id(), entry.text);
+			channel.send_message(room +" "+player.user.nickname(), response);
 
 def main():
 	users = Player.all()
@@ -258,7 +282,8 @@ def main():
     app = webapp.WSGIApplication(
 		[
 			(r'/(.*)', MainHandler),
-			(r'/hb/(.*)', HBHandler)
+			(r'/_ah/channel/connected/', CHandler)
+			(r'/_ah/channel/disconnected/', DCHandler)
 		],
         debug=True)
     run_wsgi_app(app)
