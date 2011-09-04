@@ -87,11 +87,10 @@ def NRoller(matchobj):
 		
 # content is a dictionary
 def buildJSONMessage(type, content):
-	builtcontent = '{'
-	for k,v in content:
-		builtcontent = builtcontent+k+':"'+v+'",'
-	builtcontent = builtcontent.rstrip(',') + "}"
-	message = '{type:'+type+', content:'+builtcontent+'}'
+	builtcontent = dict()
+	builtcontent['type'] = type
+	builtcontent['content'] = content
+	message = json.JSONEncoder().encode(builtcontent) # It's that easy!
 	return message
 
 def ExRoller(matchobj):
@@ -122,6 +121,8 @@ def ExRoller(matchobj):
 			result
 		 ])
 
+
+# With DCHandler, manages client connection awareness
 class CHandler(webapp.RequestHandler):
 	def get(self):
 		return
@@ -142,6 +143,7 @@ class CHandler(webapp.RequestHandler):
 			channel.send_message(room +" "+player.user.nickname(), 
 				buildJSONMessage('connect', content))
 
+# With CHandler, manages client connection awareness
 class DCHandler(webapp.RequestHandler):
 
 	def get(self):
@@ -162,9 +164,6 @@ class DCHandler(webapp.RequestHandler):
 		for player in roomquery:
 			channel.send_message(room +" "+player.user.nickname(), 
 				buildJSONMessage('disconnect', content))
-		
-		
-		
 		
 
 class MainHandler(webapp.RequestHandler):
