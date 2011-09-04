@@ -231,14 +231,14 @@ class MainHandler(webapp.RequestHandler):
 						if (str.len(entry.text) == 6 or str.len(entry.text) == 3) and isHex(entry.text):
 							style[color] = entry.text
 							user.style = encoder.encode(style)
-					if command == 'me' or 'em':
+					elif command == 'me' or 'em':
 						entry.text = '*'.join(['<span style="', stylestring, '"> ', get_user().nick, entry.text, "</span>"])
 					else:
 						stylestring = "{"
 						for k,v in style.items():
 							stylestring = stylestring + k + ": " + v +";"
 						stylestring = stylestring + "}"
-						entry.text = ''.join([get_user().nick, ': <span style="', stylestring, '">', entry.text, "</span>"])
+						entry.text = '<span class="system">Bad command in: <p>'.join([entry.text, '</p></span>'])
 				entry.room = room
 				entry.text
 				entry.put()
