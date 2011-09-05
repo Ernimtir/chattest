@@ -3,7 +3,7 @@ $(document).ready(function(){
 	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 
 	var socket = new goog.appengine.Channel(token).open();
-	init_channel(socket)
+	init_channel(socket);
 
 	$("#form1").submit(function(){
 		var path = "/" + room;
@@ -47,7 +47,7 @@ function init_channel(socket) {
 				$("#chatlog").append("\nBad Message Recieved: " + msg.data);
 				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 				break;
-		}
+		};
 	};
 	
 	socket.onerror = function(){
@@ -63,10 +63,10 @@ function init_channel(socket) {
 					$("#chatlog").append("\nReconnection error. Please reload page.");
 					$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 					return;
-				}
+				};
 				var socket = new goog.appengine.Channel(data.content.token).open();
 				init_channel(socket);
-			}
+			};
 		});
 	};
 	
