@@ -16,8 +16,7 @@ class CHandler(webapp.RequestHandler):
 		logging.info(client_id)
 		client = client_id.split(None,1)
 		room = client[0]
-		nickname = client[1]
-		user = get_user()
+		user = db.get(Key(client[1])) # Key object from client ID used to locate corresponding datastore entry
 		user.room = room;
 		user.put()
 		content = dict()
@@ -25,7 +24,7 @@ class CHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(" ".join([room, user.user.user_id()]), 
+			channel.send_message(" ".join([room, str(user.key())]), 
 				buildJSONMessage('connect', content))
 
 # With CHandler, manages client connection awareness
@@ -38,8 +37,7 @@ class DCHandler(webapp.RequestHandler):
 		client_id = self.request.get('from')
 		client = client_id.split(None,1)
 		room = client[0]
-		nickname = client[1]
-		user = get_user()
+		user = db.get(Key(client[1]))  # Key object from client ID used to locate corresponding datastore entry
 		user.room = '';
 		user.put()
 		content = dict()
@@ -47,7 +45,7 @@ class DCHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(" ".join([room, user.user.user_id()]), 
+			channel.send_message(" ".join([room, str(user.key())]), 
 				buildJSONMessage('disconnect', content))
 				
 				
@@ -56,8 +54,10 @@ class RCHandler(webapp.RequestHandler):
 		return
 		
 	def post(self):
-		room = self.request.get('msg')
-		token = channel.create_channel(" ".join([room, user.user.user_id()]))
+		room = self.request.get('from')
+		user = get_user()
+		user.room = room
+		token = channel.create_channel(" ".join([room, str(user.key())]))
 		content = dict()
 		content['token'] = token
 		self.response.out.write(buildJSONMessage('reconnect', content))
