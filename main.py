@@ -188,9 +188,8 @@ class MainHandler(webapp.RequestHandler):
 
 		self.response.out.write(render('chat.html', template_values))
 
-    def post(self, room):
 
-		
+    def post(self, room):
 		message = self.request.get('msg')
 		user = get_user()
 		
@@ -247,7 +246,7 @@ class MainHandler(webapp.RequestHandler):
 								buildJSONMessage("system", content))
 							return
 						else:
-						content["alert"] = "Invalid color code: "+entry.text
+							content["alert"] = "Invalid color code: "+entry.text
 							channel.send_message(room + user.user_id(), 
 								buildJSONMessage("system", content))
 							return
