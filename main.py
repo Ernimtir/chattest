@@ -167,10 +167,11 @@ class DCHandler(webapp.RequestHandler):
 				
 				
 class RCHandler(webapp.RequestHandler):
-	def get(self, room):
+	def get(self):
 		return
 		
-	def post(self, room):
+	def post(self):
+		room = self.request.get('msg')
 		user = get_user()
 		token = channel.create_channel(room+' '+user.nickname())
 		content = dict()
@@ -292,8 +293,9 @@ def main():
     app = webapp.WSGIApplication(
 		[
 			(r'/(.*)', MainHandler),
-			(r'/_ah/channel/connected/', CHandler)
-			(r'/_ah/channel/disconnected/', DCHandler)
+			(r'/_ah/channel/connected/', CHandler),
+			(r'/_ah/channel/disconnected/', DCHandler),
+			(r'/tokenrequest/(.*)', RCHandler)
 		],
         debug=True)
     run_wsgi_app(app)

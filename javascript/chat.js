@@ -30,6 +30,16 @@ function init_channel(socket) {
 	};
 	socket.onerror = function(){
 		$("#chatlog").append("\nConnection error. Attempting to reconnect..\n");
+		var path = "/tokenrequest";
+		$.ajax({
+			type: "POST",
+			url: path,
+			data: room,
+			success: function(data){
+				var socket = new goog.appengine.Channel(data.content.token).open();
+				init_channel(socket);
+			}
+		});
 	};
 	socket.onclose = function(){
 		$("#chatlog").append("\nConnection closed.\n");
