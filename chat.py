@@ -54,10 +54,8 @@ class MainHandler(webapp.RequestHandler):
 			entry.text = re.sub(r'\[(\d+)d(\d+)t?\]', NRoller, entry.text)
 			
 			stylestring = ""
-#			stylestring = "{"
-#			for k,v in style.items():
-#				stylestring = stylestring+": "+v+"; "
-#			stylestring += "}"
+#			for k,v in style:
+#				stylestring = stylestring+k+":"+v+";"
 			
 			if entry.text[0] == '/':
 				msg = entry.text.split(None,1)
