@@ -1,15 +1,13 @@
 $(document).ready(function(){
 	$("#msg").focus();
 	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
-	var channel = new goog.appengine.Channel(token);
-	var socket = channel.open();
+
+	var socket = new goog.appengine.Channel(token).open();
 	socket.onopen = function(){
-		console.debug('onopen');
 		$("#send").removeAttr("disabled");
 	};
-	socket.onmessage = function(message_in){
-	console.debug('message in');
-		$("#chatlog").append("\n" + message_in.data);
+	socket.onmessage = function(msg){
+		$("#chatlog").append("\n" + msg.data);
 		$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 	};
 	socket.onerror = function(){
@@ -25,8 +23,7 @@ $(document).ready(function(){
 		$.ajax({
 			type: "POST",
 			url: path,
-			data: message,
-			success: console.debug('sent' + message)
+			data: message
 		});
 		$("#msg").attr('value','');
 		$("#msg").focus();

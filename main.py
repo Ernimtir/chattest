@@ -164,6 +164,18 @@ class DCHandler(webapp.RequestHandler):
 		for player in roomquery:
 			channel.send_message(room +" "+player.user.nickname(), 
 				buildJSONMessage('disconnect', content))
+				
+				
+class RCHandler(webapp.RequestHandler):
+	def get(self, room):
+		return
+		
+	def post(self, room):
+		user = get_user()
+		token = channel.create_channel(room+' '+user.nickname())
+		content = dict()
+		content['token'] = token
+		self.response.out.write(buildJSONMessage("system", content))
 		
 
 class MainHandler(webapp.RequestHandler):
@@ -180,7 +192,7 @@ class MainHandler(webapp.RequestHandler):
 		chatquery.order('timestamp')
 		chatlog = '\n'.join([entry.text for entry in chatquery])
 
-		token = channel.create_channel(room + users.get_current_user().user_id())
+		token = channel.create_channel(room+" "+get_user().nickname())
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog
