@@ -2,11 +2,12 @@
 
 import re
 import random
+import logging
 from esUtils import *
 from esModels import *
-from django.utils import simplejson as json
 from google.appengine.ext import webapp
 from google.appengine.api import channel
+from django.utils import simplejson as json
 from google.appengine.ext.webapp.util import run_wsgi_app	
 
 class MainHandler(webapp.RequestHandler):
@@ -33,42 +34,45 @@ class MainHandler(webapp.RequestHandler):
 
 
     def post(self, room):
-		message = self.request.get('msg')
+		message = self.request.get('json')
 		user = get_user()
 		
 		decoder = json.JSONDecoder()
 		encoder = json.JSONEncoder()
 		
-		msgJSON = decoder(message)
+		logging.info(message)
+		msgJSON = decoder.decode(message)
 		response = ''
 		content = dict()
-		if msgJSON[type] == "chat":
-			style = decoder.decode(user.style)
+		if msgJSON['type'] == "chat":
+			if user.style:
+				style = decoder.decode(user.style)
 			entry = ChatEntry()
 			
-			entry.text = msgJSON[content][text] #pull message
+			entry.text = msgJSON['content']['text'] #pull message
 			entry.text = re.sub(r'\[(\d+)d(\.dmg)?\]', ExRoller, entry.text)
 			entry.text = re.sub(r'\[(\d+)d(\d+)t?\]', NRoller, entry.text)
 			
-			stylestring = "{"
-			for k,v in style.items():
-				stylestring = stylestring+": "+v+"; "
-			stylestring += "}"
+			stylestring = ""
+#			stylestring = "{"
+#			for k,v in style.items():
+#				stylestring = stylestring+": "+v+"; "
+#			stylestring += "}"
 			
 			if entry.text[0] == '/':
 				msg = entry.text.split(None,1)
 				entry.text = msg[1]
 				if msg[0]:
-					command = string.lstrip(msg[0],'/')
+					command = msg[0].lstrip('/')
 					if command == 'nick':
 						user.nick = entry.text
-						content["text"] = 'Nick changed to: '+entry.text+'.'
+						content["text"] = 'Nick changed to "'+entry.text+'".'
 						channel.send_message(room + user.user.user_id(), # need to get goog user obj from custom user obj, then grab id from that
 								buildJSONMessage('alert',content))
 						user.put()
 						return
 					elif command == 'asem' or command == "asme":
-						entry.text = '*'+entry.text
+						entry.text = '*'+entry.text+'*'
 					elif command == 'as':
 						msg = entry.text.split(None,1)
 						entry.text = msg[0]+": "+msg[1]
@@ -82,34 +86,34 @@ class MainHandler(webapp.RequestHandler):
 						entry.text = get_user().user.nickname()+': (( '+entry.text+' ))'
 					elif command == 'color':
 						if (str.len(entry.text) == 6 or str.len(entry.text) == 3) and isHex(entry.text):
-							style[color] = entry.text
+							style['color'] = entry.text
 							user.style = encoder.encode(style)
 							user.put()
-							content["text"] = 'Color changed to: '+entry.text
+							content['text'] = 'Color changed to: '+entry.text
 							channel.send_message(room + user.user.user_id(), # need to get goog user obj from custom user obj, then grab id from that
 								buildJSONMessage('alert', content))
 							return
 						else:
-							content["text"] = "Invalid color code: "+entry.text
+							content['text'] = "Invalid color code: "+entry.text
 							channel.send_message(room + user.user.user_id(), # need to get goog user obj from custom user obj, then grab id from that
 								buildJSONMessage("alert", content))
 							return
 					elif command == 'me' or 'em':
-						entry.text = '*<span style="'+stylestring+'"> '+get_user().nick+entry.text+"</span>"
+						entry.text = '*<span style="'+stylestring+'">'+get_user().nick+entry.text+"</span>"
 					else:
-						content["text"] = "Bad command in: "+entry.text
+						content['text'] = "Bad command in: "+entry.text
 						channel.send_message(room+user.user.user_id(), # need to get goog user obj from custom user obj, then grab id from that
 							buildJSONMessage("alert", content))
 						return
 				
 			else:
-				entry.text = entry.text.join(['<span style="',stylestring,'"> ',get_user.nick,": ",entry.text,'</span>'])
+				entry.text = ''.join(['<span style="',stylestring,'">',get_user().nick,": ",entry.text,'</span>'])
 			entry.room = room
 			content["text"] = entry.text
 			response = buildJSONMessage("chat", content)
 			entry.put()
 			user.put()
-		elif msgJSON[type] == "system":
+		elif msgJSON['type'] == "system":
 			pass # nothing here yet
 		else:
 			return # Bad data

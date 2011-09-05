@@ -2,16 +2,15 @@ $(document).ready(function(){
 	$("#msg").focus();
 	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 
-	var socket = new goog.appengine.Channel(token).open();
-	init_channel(socket);
+	init_channel(new goog.appengine.Channel(token).open());
 
 	$("#form1").submit(function(){
-		var path = "/" + room;
-		var message = $(this).serialize();
+		var path = "/chat/" + room;
+		var message = $("#msg").attr('value');
 		$.ajax({
-			type: "POST",
+			type: 'POST',
 			url: path,
-			data: message
+			data: 'json={"type": "chat" , "content": {"text": "' + message + '" } }'
 		});
 		$("#msg").attr('value','');
 		$("#msg").focus();
@@ -27,8 +26,8 @@ function init_channel(socket) {
 	};
 	
 	socket.onmessage = function(msg){
-		switch(msg.data.type)
-		{
+		msg = JSON.parse(msg);
+		switch(msg.data.type) {
 			case "chat":
 				$("#chatlog").append("\n" + msg.data.content.text);
 				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
@@ -66,7 +65,7 @@ function init_channel(socket) {
 				};
 				var socket = new goog.appengine.Channel(data.content.token).open();
 				init_channel(socket);
-			};
+			}
 		});
 	};
 	

@@ -6,7 +6,18 @@ api_version: 1
 handlers:
 - url: /js
   static_dir: javascript
-
-- url: .*
-  script: main.py
+  
+- url: /_ah/channel/.*
+  script: connectionManager.py
   login: required
+  
+- url: /tokenrequest
+  script: connectionManager.py
+  login: required
+
+- url: /chat/.*
+  script: chat.py
+  login: required
+
+inbound_services:
+- channel_presence
