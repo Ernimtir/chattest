@@ -24,7 +24,7 @@ class CHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(room+" "+player.user.user_id(), 
+			channel.send_message(" ".join([room, user.user.user_id()]), 
 				buildJSONMessage('connect', content))
 
 # With CHandler, manages client connection awareness
@@ -46,7 +46,7 @@ class DCHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(room+" "+player.user.user_id(), 
+			channel.send_message(" ".join([room, user.user.user_id()]), 
 				buildJSONMessage('disconnect', content))
 				
 				
@@ -56,7 +56,7 @@ class RCHandler(webapp.RequestHandler):
 		
 	def post(self):
 		room = self.request.get('msg')
-		token = channel.create_channel(room+get_user().user.user_id())
+		token = channel.create_channel(" ".join([room, user.user.user_id()]))
 		content = dict()
 		content['token'] = token
 		self.response.out.write(buildJSONMessage('reconnect', content))
