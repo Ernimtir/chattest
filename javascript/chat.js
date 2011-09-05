@@ -51,6 +51,7 @@ function init_channel(socket) {
 	};
 	
 	socket.onerror = function(){
+		$("#send").attr("disabled", "disabled");
 		$("#chatlog").append("\nConnection error. Attempting to reconnect..\n");
 		var path = "/tokenrequest";
 		$.ajax({
@@ -70,6 +71,8 @@ function init_channel(socket) {
 	};
 	
 	socket.onclose = function(){
+		$("#send").attr("disabled", "disabled");
 		$("#chatlog").append("\nConnection closed.\n");
+		
 	};
 }
