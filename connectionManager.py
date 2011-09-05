@@ -13,6 +13,7 @@ class CHandler(webapp.RequestHandler):
 		
 	def post(self):
 		client_id = self.request.get('from')
+		logging.info(client_id)
 		client = client_id.split(None,1)
 		room = client[0]
 		nickname = client[1]
@@ -66,7 +67,7 @@ def main():
 		[
 			(r'/_ah/channel/connected/', CHandler),
 			(r'/_ah/channel/disconnected/', DCHandler),
-			(r'/tokenrequest', RCHandler),
+			(r'/tokenrequest', RCHandler)
 		],
         debug=True)
     run_wsgi_app(app)

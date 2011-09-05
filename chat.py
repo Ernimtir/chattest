@@ -40,7 +40,6 @@ class MainHandler(webapp.RequestHandler):
 		decoder = json.JSONDecoder()
 		encoder = json.JSONEncoder()
 		
-		logging.info(message)
 		msgJSON = decoder.decode(message)
 		response = ''
 		content = dict()
