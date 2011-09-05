@@ -3,19 +3,7 @@ $(document).ready(function(){
 	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 
 	var socket = new goog.appengine.Channel(token).open();
-	socket.onopen = function(){
-		$("#send").removeAttr("disabled");
-	};
-	socket.onmessage = function(msg){
-		$("#chatlog").append("\n" + msg.data);
-		$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
-	};
-	socket.onerror = function(){
-		$("#chatlog").append("\n--ERROR-- error in socket\n");
-	};
-	socket.onclose = function(){
-		$("#chatlog").append("\n--INFO-- socket closed\n--INFO-- reload page to connect\n");
-	};
+	init_channel(socket)
 
 	$("#form1").submit(function(){
 		var path = "/" + room;
@@ -30,3 +18,20 @@ $(document).ready(function(){
 		return false;
 	});
 });
+
+function init_channel(socket) {
+	socket.onopen = function(){
+		$("#send").removeAttr("disabled");
+		$("#chatlog").append("\nConnection established.\n");
+	};
+	socket.onmessage = function(msg){
+		$("#chatlog").append("\n" + msg.data);
+		$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+	};
+	socket.onerror = function(){
+		$("#chatlog").append("\nConnection error. Attempting to reconnect..\n");
+	};
+	socket.onclose = function(){
+		$("#chatlog").append("\nConnection closed.\n");
+	};
+}
