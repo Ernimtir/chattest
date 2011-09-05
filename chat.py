@@ -24,7 +24,7 @@ class MainHandler(webapp.RequestHandler):
 		chatquery.order('timestamp')
 		chatlog = '\n'.join([entry.text for entry in chatquery])
 
-		token = channel.create_channel(room+get_user().user.user_id())
+		token = channel.create_channel(" ".join([room, get_user().user.user_id()]))
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog
@@ -40,7 +40,6 @@ class MainHandler(webapp.RequestHandler):
 		decoder = json.JSONDecoder()
 		encoder = json.JSONEncoder()
 		
-		logging.info(message)
 		msgJSON = decoder.decode(message)
 		response = ''
 		content = dict()
