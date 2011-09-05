@@ -85,7 +85,16 @@ def NRoller(matchobj):
 			end
 		])
 		
-# content is a dictionary
+# content parameter should be a dict, but not required
+# Current message type strings: chat (chat text, displayed to all users as a convention)
+#								alert (chat text, displayed to one user only as a convention)
+#								system (system upkeep messages, displayed to nobody)
+#								connect/disconnect (used to notify clients of other clients' status)
+#								reconnect (only used in response to request for new token)
+#
+# No practical different exists between chat and alert style messages, the difference is
+# merely to allow for easy differentiation in code
+
 def buildJSONMessage(type, content):
 	builtcontent = dict()
 	builtcontent['type'] = type
@@ -176,7 +185,7 @@ class RCHandler(webapp.RequestHandler):
 		token = channel.create_channel(room+' '+user.nickname())
 		content = dict()
 		content['token'] = token
-		self.response.out.write(buildJSONMessage("system", content))
+		self.response.out.write(buildJSONMessage('reconnect', content))
 		
 
 class MainHandler(webapp.RequestHandler):
@@ -232,9 +241,9 @@ class MainHandler(webapp.RequestHandler):
 					command = string.lstrip(msg[0],'/')
 					if command == 'nick':
 						user.nick = entry.text
-						content["alert"] = 'Nick changed to: '+entry.text+'.'
+						content["text"] = 'Nick changed to: '+entry.text+'.'
 						channel.send_message(room + user.user_id(), 
-								buildJSONMessage("system",content))
+								buildJSONMessage('alert',content))
 						user.put()
 						return
 					elif command == 'asem' or command == "asme":
@@ -254,21 +263,22 @@ class MainHandler(webapp.RequestHandler):
 						if (str.len(entry.text) == 6 or str.len(entry.text) == 3) and isHex(entry.text):
 							style[color] = entry.text
 							user.style = encoder.encode(style)
-							content["alert"] = 'Color changed to: '+entry.text
+							user.put()
+							content["text"] = 'Color changed to: '+entry.text
 							channel.send_message(room + user.user_id(), 
-								buildJSONMessage("system", content))
+								buildJSONMessage('alert', content))
 							return
 						else:
-							content["alert"] = "Invalid color code: "+entry.text
+							content["text"] = "Invalid color code: "+entry.text
 							channel.send_message(room + user.user_id(), 
-								buildJSONMessage("system", content))
+								buildJSONMessage("alert", content))
 							return
 					elif command == 'me' or 'em':
 						entry.text = '*<span style="'+stylestring+'"> '+get_user().nick+entry.text+"</span>"
 					else:
-					content["alert"] = "Bad command in: "+entry.text
+					content["text"] = "Bad command in: "+entry.text
 						channel.send_message(room + user.user_id(), 
-							buildJSONMessage("system", content))
+							buildJSONMessage("alert", content))
 						return
 				
 			else:
