@@ -20,14 +20,36 @@ $(document).ready(function(){
 });
 
 function init_channel(socket) {
+
 	socket.onopen = function(){
 		$("#send").removeAttr("disabled");
 		$("#chatlog").append("\nConnection established.\n");
 	};
+	
 	socket.onmessage = function(msg){
-		$("#chatlog").append("\n" + msg.data);
-		$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+		switch(msg.data.type)
+		{
+			case "chat":
+				$("#chatlog").append("\n" + msg.data.content.text);
+				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+				break;
+			case "alert":
+				$("#chatlog").append("\n" + msg.data.content.text);
+				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+				break;
+			case "connect":
+				//nothing yet
+				break;
+			case "disconnect":
+				//nothing yet
+				break;
+			default:
+				$("#chatlog").append("\nBad Message Recieved: " + msg.data);
+				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+				break;
+		}
 	};
+	
 	socket.onerror = function(){
 		$("#chatlog").append("\nConnection error. Attempting to reconnect..\n");
 		var path = "/tokenrequest";
@@ -36,11 +58,17 @@ function init_channel(socket) {
 			url: path,
 			data: room,
 			success: function(data){
+				if(data.type != "reconnect"){
+					$("#chatlog").append("\nReconnection error. Please reload page.");
+					$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+					return;
+				}
 				var socket = new goog.appengine.Channel(data.content.token).open();
 				init_channel(socket);
 			}
 		});
 	};
+	
 	socket.onclose = function(){
 		$("#chatlog").append("\nConnection closed.\n");
 	};
