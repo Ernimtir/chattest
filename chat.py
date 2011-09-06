@@ -24,7 +24,9 @@ class MainHandler(webapp.RequestHandler):
 		chatquery.order('timestamp')
 		chatlog = '\n'.join([entry.text for entry in chatquery])
 
-		token = channel.create_channel(" ".join([room, get_user().user.user_id()]))
+		chanID = " ".join([room, str(get_user().key())])
+		logging.info(chanID)
+		token = channel.create_channel(chanID)
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog
@@ -115,7 +117,7 @@ class MainHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(" ".join([room, str(user.key())]), response);  # Uses Key object so each channel also references user
+			channel.send_message(" ".join([room, str(player.key())]), response);  # Uses Key object so each channel also references player
 
 def main():
     app = webapp.WSGIApplication(

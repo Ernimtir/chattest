@@ -2,6 +2,7 @@
 
 from esUtils import *
 from esModels import *
+from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.api import channel
 from google.appengine.ext.webapp.util import run_wsgi_app	
@@ -16,7 +17,7 @@ class CHandler(webapp.RequestHandler):
 		logging.info(client_id)
 		client = client_id.split(None,1)
 		room = client[0]
-		user = db.get(Key(client[1])) # Key object from client ID used to locate corresponding datastore entry
+		user = db.get(db.Key(client[1])) # Key object from client ID used to locate corresponding datastore entry
 		user.room = room;
 		user.put()
 		content = dict()
@@ -24,12 +25,11 @@ class CHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(" ".join([room, str(user.key())]), 
+			channel.send_message(" ".join([room, str(player.key())]), 
 				buildJSONMessage('connect', content))
 
 # With CHandler, manages client connection awareness
 class DCHandler(webapp.RequestHandler):
-
 	def get(self):
 		return # f right off
 
@@ -37,7 +37,7 @@ class DCHandler(webapp.RequestHandler):
 		client_id = self.request.get('from')
 		client = client_id.split(None,1)
 		room = client[0]
-		user = db.get(Key(client[1]))  # Key object from client ID used to locate corresponding datastore entry
+		user = db.get(db.Key(client[1]))  # Key object from client ID used to locate corresponding datastore entry
 		user.room = '';
 		user.put()
 		content = dict()
@@ -47,7 +47,6 @@ class DCHandler(webapp.RequestHandler):
 		for player in roomquery:
 			channel.send_message(" ".join([room, str(user.key())]), 
 				buildJSONMessage('disconnect', content))
-				
 				
 class RCHandler(webapp.RequestHandler):
 	def get(self):

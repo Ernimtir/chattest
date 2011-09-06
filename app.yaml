@@ -7,11 +7,7 @@ handlers:
 - url: /js
   static_dir: javascript
 
-- url: /_ah/channel/connected/
-  script: connectionManager.py
-  login: required
-
-- url: /_ah/channel/disconnected/
+- url: /_ah/channel/.*
   script: connectionManager.py
   
 - url: /tokenrequest
