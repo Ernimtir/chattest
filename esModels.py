@@ -3,7 +3,6 @@
 from google.appengine.ext import db
 
 class Player(db.Model):
-	user_id = db.StringProperty()
 	user = db.UserProperty(auto_current_user_add=True)
 	nick = db.StringProperty()
 	room = db.StringProperty()
