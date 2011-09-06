@@ -30,9 +30,7 @@ def get_user():
 				player = Player(key_name=user_id)
 				player.nick = user.nickname()
 				player.put()
-			if player.user_id == "":  # Pulls out user id for reference use without needing to repopulate
-				player.user_id = user_id
-				player.put()
+			
 			return player
 		else:
 			# user DOES NOT have a unique permanent ID
