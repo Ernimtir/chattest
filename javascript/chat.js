@@ -1,8 +1,8 @@
 $(document).ready(function(){
 	$("#msg").focus();
 	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
-
-	init_channel(new goog.appengine.Channel(token).open());
+	
+	init_channel(new goog.appengine.Channel(request_token(room)).open());
 
 	$("#form1").submit(function(){
 		var path = "/chat/" + room;
@@ -17,6 +17,23 @@ $(document).ready(function(){
 		return false;
 	});
 });
+
+function request_token(room) {
+	var path = "/tokenrequest";
+	$.ajax({
+		type: "POST",
+		url: path,
+		data: room,
+		success: function(data){
+			if(data.type != "reconnect"){
+				$("#chatlog").append("\nReconnection error. Please reload page.");
+				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+				return;
+			};
+			return data.content.token;
+		}
+	});
+}
 
 function init_channel(socket) {
 
@@ -52,21 +69,9 @@ function init_channel(socket) {
 	socket.onerror = function(){
 		$("#send").attr("disabled", "disabled");
 		$("#chatlog").append("\nConnection error. Attempting to reconnect..\n");
-		var path = "/tokenrequest";
-		$.ajax({
-			type: "POST",
-			url: path,
-			data: room,
-			success: function(data){
-				if(data.type != "reconnect"){
-					$("#chatlog").append("\nReconnection error. Please reload page.");
-					$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
-					return;
-				};
-				var socket = new goog.appengine.Channel(data.content.token).open();
-				init_channel(socket);
-			}
-		});
+		
+		var socket = new goog.appengine.Channel(request_token(room)).open();
+		init_channel(socket);
 	};
 	
 	socket.onclose = function(){

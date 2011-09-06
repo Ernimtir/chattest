@@ -5,6 +5,7 @@ import random
 import logging
 from esUtils import *
 from esModels import *
+from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.api import channel
 from django.utils import simplejson as json
@@ -30,7 +31,6 @@ class MainHandler(webapp.RequestHandler):
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog
-		template_values['token'] = token
 
 		self.response.out.write(render('chat.html', template_values))
 

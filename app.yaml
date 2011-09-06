@@ -12,6 +12,7 @@ handlers:
   
 - url: /tokenrequest
   script: connectionManager.py
+  login: required
 
 - url: /chat/.*
   script: chat.py
