@@ -27,7 +27,7 @@ class MainHandler(webapp.RequestHandler):
 
 		chanID = " ".join([room, get_user().user_id])
 		logging.info(chanID)
-		token = channel.create_channel(chanID)
+		
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog

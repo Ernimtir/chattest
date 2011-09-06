@@ -16,7 +16,7 @@ class CHandler(webapp.RequestHandler):
 		logging.info(client_id)
 		client = client_id.split(None,1)
 		room = client[0]
-		user = db.get(db.Key.from_path('Player', client[0])) # Key object from client ID used to locate corresponding datastore entry
+		user = db.get(db.Key.from_path('Player', client[1])) # Key object from client ID used to locate corresponding datastore entry
 		user.room = room;
 		user.put()
 		content = dict()
@@ -36,7 +36,7 @@ class DCHandler(webapp.RequestHandler):
 		client_id = self.request.get('from')
 		client = client_id.split(None,1)
 		room = client[0]
-		user = db.get(db.Key.from_path('Player', client[0]))
+		user = db.get(db.Key.from_path('Player', client[1]))
 		user.room = '';
 		user.put()
 		content = dict()
