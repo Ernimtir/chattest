@@ -25,7 +25,7 @@ class MainHandler(webapp.RequestHandler):
 		chatquery.order('timestamp')
 		chatlog = '\n'.join([entry.text for entry in chatquery])
 
-		chanID = " ".join([room, str(get_user().key())])
+		chanID = " ".join([room, get_user().user_id])
 		logging.info(chanID)
 		token = channel.create_channel(chanID)
 
@@ -87,19 +87,19 @@ class MainHandler(webapp.RequestHandler):
 							user.style = encoder.encode(style)
 							user.put()
 							content['text'] = 'Color changed to: '+entry.text
-							channel.send_message(" ".join([room, str(user.key())]), # Uses Key object so each channel also references user
+							channel.send_message(" ".join([room, user.user_id]), # Uses Key object so each channel also references user
 								buildJSONMessage('alert', content))
 							return
 						else:
 							content['text'] = "Invalid color code: "+entry.text
-							channel.send_message(" ".join([room, str(user.key())]), # Uses Key object so each channel also references user
+							channel.send_message(" ".join([room, user.user_id]), # Uses Key object so each channel also references user
 								buildJSONMessage("alert", content))
 							return
 					elif command == 'me' or 'em':
 						entry.text = '*<span style="'+stylestring+'">'+user.nick+entry.text+"</span>"
 					else:
 						content['text'] = "Bad command in: "+entry.text
-						channel.send_message(" ".join([room, str(user.key())]), # Uses Key object so each channel also references user
+						channel.send_message(" ".join([room, user.user_id]), # Uses Key object so each channel also references user
 							buildJSONMessage("alert", content))
 						return
 				

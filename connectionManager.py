@@ -44,7 +44,7 @@ class DCHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(" ".join([room, str(user.key())]), 
+			channel.send_message(" ".join([room, user.user_id]), 
 				buildJSONMessage('disconnect', content))
 				
 class RCHandler(webapp.RequestHandler):
@@ -55,7 +55,7 @@ class RCHandler(webapp.RequestHandler):
 		room = self.request.get('from')
 		user = get_user()
 		user.room = room
-		token = channel.create_channel(" ".join([room, str(user.key())]))
+		token = channel.create_channel(" ".join([room, user.user_id]))
 		content = dict()
 		content['token'] = token
 		self.response.out.write(buildJSONMessage('reconnect', content))
