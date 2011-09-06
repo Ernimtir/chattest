@@ -85,19 +85,19 @@ class MainHandler(webapp.RequestHandler):
 							user.style = encoder.encode(style)
 							user.put()
 							content['text'] = 'Color changed to: '+entry.text
-							channel.send_message(" ".join([room, user.user.user_id()]), # need to get goog user obj from custom user obj, then grab id from that
+							channel.send_message(" ".join([room, str(user.key())]), # Uses Key object so each channel also references user
 								buildJSONMessage('alert', content))
 							return
 						else:
 							content['text'] = "Invalid color code: "+entry.text
-							channel.send_message(" ".join([room, user.user.user_id()]), # need to get goog user obj from custom user obj, then grab id from that
+							channel.send_message(" ".join([room, str(user.key())]), # Uses Key object so each channel also references user
 								buildJSONMessage("alert", content))
 							return
 					elif command == 'me' or 'em':
 						entry.text = '*<span style="'+stylestring+'">'+get_user().nick+entry.text+"</span>"
 					else:
 						content['text'] = "Bad command in: "+entry.text
-						channel.send_message(" ".join([room, user.user.user_id()]), # need to get goog user obj from custom user obj, then grab id from that
+						channel.send_message(" ".join([room, str(user.key())]), # Uses Key object so each channel also references user
 							buildJSONMessage("alert", content))
 						return
 				
@@ -115,7 +115,7 @@ class MainHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
-			channel.send_message(" ".join([room, user.user.user_id()]), response);  # need to get goog user obj from custom user obj, then grab id from that
+			channel.send_message(" ".join([room, str(user.key())]), response);  # Uses Key object so each channel also references user
 
 def main():
     app = webapp.WSGIApplication(

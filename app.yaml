@@ -9,6 +9,7 @@ handlers:
 
 - url: /_ah/channel/connected/
   script: connectionManager.py
+  login: required
 
 - url: /_ah/channel/disconnected/
   script: connectionManager.py
