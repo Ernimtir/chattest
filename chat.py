@@ -27,7 +27,7 @@ class MainHandler(webapp.RequestHandler):
 
 		chanID = " ".join([room, get_user().user_id])
 		logging.info(chanID)
-		
+		# channel creation no longer handled here
 
 		template_values['room'] = room
 		template_values['chatlog'] = chatlog
