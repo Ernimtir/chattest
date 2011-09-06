@@ -78,9 +78,9 @@ class MainHandler(webapp.RequestHandler):
 							result = heads
 						else: 
 							result = tails
-						entry.text = '*'+'<span style="'+stylestring+'"> '+get_user().nick+" flipped "+result+".</span>"
+						entry.text = '*'+'<span style="'+stylestring+'"> '+user.nick+" flipped "+result+".</span>"
 					elif command == 'ooc':
-						entry.text = get_user().user.nickname()+': (( '+entry.text+' ))'
+						entry.text = user.user.nickname()+': (( '+entry.text+' ))'
 					elif command == 'color':
 						if (str.len(entry.text) == 6 or str.len(entry.text) == 3) and isHex(entry.text):
 							style['color'] = entry.text
@@ -96,7 +96,7 @@ class MainHandler(webapp.RequestHandler):
 								buildJSONMessage("alert", content))
 							return
 					elif command == 'me' or 'em':
-						entry.text = '*<span style="'+stylestring+'">'+get_user().nick+entry.text+"</span>"
+						entry.text = '*<span style="'+stylestring+'">'+user.nick+entry.text+"</span>"
 					else:
 						content['text'] = "Bad command in: "+entry.text
 						channel.send_message(" ".join([room, str(user.key())]), # Uses Key object so each channel also references user
@@ -104,7 +104,7 @@ class MainHandler(webapp.RequestHandler):
 						return
 				
 			else:
-				entry.text = ''.join(['<span style="',stylestring,'">',get_user().nick,": ",entry.text,'</span>'])
+				entry.text = ''.join(['<span style="',stylestring,'">',user.nick,": ",entry.text,'</span>'])
 			entry.room = room
 			content["text"] = entry.text
 			response = buildJSONMessage("chat", content)
