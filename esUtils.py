@@ -2,7 +2,6 @@
 
 import os
 import logging
-from esModels import *	
 from google.appengine.ext import db
 from google.appengine.api import users
 from django.utils import simplejson as json
