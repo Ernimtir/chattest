@@ -9,10 +9,11 @@ $(document).ready(function(){
 	$("#form1").submit(function(){
 		var path = "/chat/" + room;
 		var message = $("#msg").attr('value');
+		var msgdata = 'json={"type": "chat" , "content": {"text": "' + message + '" } }';
 		$.ajax({
 			type: 'POST',
 			url: path,
-			data: 'json={"type": "chat" , "content": {"text": "' + message + '" } }'
+			data: msgdata
 		});
 		$("#msg").attr('value','');
 		$("#msg").focus();
@@ -22,7 +23,7 @@ $(document).ready(function(){
 
 function create_channel(room) {
 	var path = "/tokenrequest";
-	var message = 'json={"type": "system", "content":{"room": "'+room+'"}}'
+	var message = 'json={"type": "system", "content":{"room": "'+room+'"}}';
 	$.ajax({
 		type: "POST",
 		url: path,
@@ -53,14 +54,15 @@ function init_channel(socket) {
 	};
 	
 	socket.onmessage = function(msg){
-		msg = JSON.parse(msg);
-		switch(msg.data.type) {
+		$("#chatlog").append("<br />" + msg);
+		msgobj = JSON.parse(msg.data);
+		switch(msgobj.type) {
 			case "chat":
-				$("#chatlog").append("<br />" + msg.data.content.text);
+				$("#chatlog").append("<br />" + msgobj.content.text);
 				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 				break;
 			case "alert":
-				$("#chatlog").append("<br />" + msg.data.content.text);
+				$("#chatlog").append("<br />" + msgobj.content.text);
 				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 				break;
 			case "connect":
@@ -70,7 +72,7 @@ function init_channel(socket) {
 				//nothing yet
 				break;
 			default:
-				$("#chatlog").append("<br />Bad Message Recieved: " + msg.data);
+				$("#chatlog").append("<br />Bad Message Recieved: " + msgobj.data);
 				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 				break;
 		};
