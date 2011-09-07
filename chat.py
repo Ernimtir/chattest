@@ -23,7 +23,7 @@ class MainHandler(webapp.RequestHandler):
 		chatquery = ChatEntry.all()
 		chatquery.filter('room =', room)
 		chatquery.order('timestamp')
-		chatlog = '\n'.join([entry.text for entry in chatquery])
+		chatlog = '<br />'.join([entry.text for entry in chatquery])
 
 		chanID = " ".join([room, get_user().user.user_id()])
 		logging.info(chanID)
@@ -117,6 +117,7 @@ class MainHandler(webapp.RequestHandler):
 		roomquery = Player.all()
 		roomquery.filter('room =', room)
 		for player in roomquery:
+			logging.info("sending to "+" ".join([room, player.user.user_id()]))
 			channel.send_message(" ".join([room, player.user.user_id()]), response);  # Uses Key object so each channel also references player
 
 def main():
