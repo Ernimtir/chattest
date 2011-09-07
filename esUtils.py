@@ -2,6 +2,7 @@
 
 import os
 import logging
+import string
 from esModels import *	
 from google.appengine.ext import db
 from google.appengine.api import users
@@ -44,8 +45,8 @@ def get_user():
 def isHex(checkstring):
 	for a in checkstring:
 		if string.hexdigits.find(a) <0:
-			return false
-	return true
+			return False
+	return True
 
 def NRoller(matchobj):
 	num_dice = int(matchobj.group(1))

@@ -48,6 +48,8 @@ class MainHandler(webapp.RequestHandler):
 		if msgJSON['type'] == "chat":
 			if user.style:
 				style = decoder.decode(user.style)
+			else:
+				style = dict()
 			entry = ChatEntry()
 			
 			entry.text = msgJSON['content']['text'] #pull message
@@ -55,8 +57,8 @@ class MainHandler(webapp.RequestHandler):
 			entry.text = re.sub(r'\[(\d+)d(\d+)t?\]', NRoller, entry.text)
 			
 			stylestring = ""
-#			for k,v in style:
-#				stylestring = stylestring+k+":"+v+";"
+			for k,v in style.iteritems():
+				stylestring = stylestring+k+":"+v+";"
 			
 			if entry.text[0] == '/':
 				msg = entry.text.split(None,1)
@@ -82,7 +84,7 @@ class MainHandler(webapp.RequestHandler):
 					elif command == 'ooc':
 						entry.text = user.user.nickname()+': (( '+entry.text+' ))'
 					elif command == 'color':
-						if (str.len(entry.text) == 6 or str.len(entry.text) == 3) and isHex(entry.text):
+						if (entry.text.__len__() == 6 or entry.text.__len__() == 3) and isHex(entry.text):
 							style['color'] = entry.text
 							user.style = encoder.encode(style)
 							user.put()
