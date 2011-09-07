@@ -1,10 +1,6 @@
 $(document).ready(function(){
 	$("#msg").focus();
-	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
-	
 	var socket = create_channel(room);
-	
-	
 
 	$("#form1").submit(function(){
 		var path = "/chat/" + room;
@@ -21,6 +17,10 @@ $(document).ready(function(){
 	});
 });
 
+$(window).load(function() {
+	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+});
+
 function create_channel(room) {
 	var path = "/tokenrequest";
 	var message = 'json={"type": "system", "content":{"room": "'+room+'"}}';
@@ -33,6 +33,7 @@ function create_channel(room) {
 			if(dataJSON.type == "connect"){
 				var token = dataJSON.content.token;
 				$("#chatlog").append("<br />Recieved token.");
+				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 				var channel = new goog.appengine.Channel(token);
 				var socket = channel.open();
 				init_channel(socket);
@@ -48,13 +49,14 @@ function create_channel(room) {
 
 function init_channel(socket) {
 	$("#chatlog").append("<br />Initializing...");
+	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 	socket.onopen = function(){
 		$("#send").removeAttr("disabled");
 		$("#chatlog").append("<br />Connection established.");
+		$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 	};
 	
 	socket.onmessage = function(msg){
-		$("#chatlog").append("<br />" + msg);
 		msgobj = JSON.parse(msg.data);
 		switch(msgobj.type) {
 			case "chat":
@@ -81,6 +83,7 @@ function init_channel(socket) {
 	socket.onerror = function(){
 		$("#send").attr("disabled", "disabled");
 		$("#chatlog").append("<br />Connection error. Attempting to reconnect..<br />");
+		$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 		
 		create_channel(room);
 	};
@@ -88,6 +91,7 @@ function init_channel(socket) {
 	socket.onclose = function(){
 		$("#send").attr("disabled", "disabled");
 		$("#chatlog").append("<br />Connection closed.<br />");
+		$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 		
 	};
 }
