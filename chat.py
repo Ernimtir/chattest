@@ -11,6 +11,21 @@ from google.appengine.api import channel
 from django.utils import simplejson as json
 from google.appengine.ext.webapp.util import run_wsgi_app	
 
+class DefaultHandler(webapp.RequestHandler):
+	def get(self):
+		self.response.out.write("""<!DOCTYPE html>
+			<html>
+			<head>
+			<title>Your Page Title</title>
+			<meta http-equiv="REFRESH" content="0;url=http://www.the-domain-you-want-to-redirect-to.com"></HEAD>
+			<body>
+			Optional page text here.
+			</body>
+			</html>""")
+	
+	def post(self):
+		return
+
 class MainHandler(webapp.RequestHandler):
     def get(self, room):
 		if room == 'favicon.ico':
@@ -125,7 +140,8 @@ class MainHandler(webapp.RequestHandler):
 def main():
     app = webapp.WSGIApplication(
 		[
-			(r'/chat/(.*)', MainHandler)
+			(r'/chat/(.*)', MainHandler),
+			(r'/', DefaultHandler)
 		],
         debug=True)
     run_wsgi_app(app)
