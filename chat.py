@@ -17,7 +17,7 @@ class DefaultHandler(webapp.RequestHandler):
 			<html>
 			<head>
 			<title>Your Page Title</title>
-			<meta http-equiv="REFRESH" content="0;url=http://www.the-domain-you-want-to-redirect-to.com"></HEAD>
+			<meta http-equiv="REFRESH" content="/chat/welcome"></HEAD>
 			<body>
 			Optional page text here.
 			</body>
