@@ -1,11 +1,13 @@
 $(document).ready(function(){
 	$("#msg").focus();
 	var socket = create_channel(room);
-
+	var msgobj;
 	$("#form1").submit(function(){
+	msgobj.type = "chat";
+	msgobj.content = {};
+	msgobj.content.message = $("#msg").attr('value');
 		var path = "/chat/" + room;
-		var message = $("#msg").attr('value');
-		var msgdata = 'json={"type": "chat" , "content": {"text": "' + message + '" } }';
+		var message = 'json='+JSON.stringify(msgobj);
 		$.ajax({
 			type: 'POST',
 			url: path,
@@ -22,8 +24,12 @@ $(window).load(function() {
 });
 
 function create_channel(room) {
+	var msgobj = {};
+	msgobj.type = "system";
+	msgobj.content = {};
+	msgobj.content.room = room;
 	var path = "/tokenrequest";
-	var message = 'json={"type": "system", "content":{"room": "'+room+'"}}';
+	var message = 'json='+JSON.stringify(msgobj);
 	$.ajax({
 		type: "POST",
 		url: path,
