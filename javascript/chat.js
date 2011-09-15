@@ -1,17 +1,38 @@
+var notifyChecked = false;
+var allowNotifications = true;
+var notifications = false;
+
 $(document).ready(function(){
+	
 	$("#msg").focus();
 	var socket = create_channel(room);
 	var msgobj;
 	$("#form1").submit(function(){
-	msgobj.type = "chat";
-	msgobj.content = {};
-	msgobj.content.message = $("#msg").attr('value');
+		if (window.webkitNotifications) {
+			if (window.webkitNotifications.checkPermission() != 0 && !notifyChecked) {
+				window.webkitNotifications.requestPermission();
+				notifyChecked = true;
+			}
+  			console.log("Notifications are supported!");
+  			notifications = true;
+		} 
+		else {
+  			console.log("Notifications are not supported for this Browser/OS version yet.");
+  			notifyChecked = true;
+  			notifications = false;
+		}
+		
+		
+		msgobj = {};
+		msgobj.type = "chat";
+		msgobj.content = {};
+		msgobj.content.text = $("#msg").attr('value');
 		var path = "/chat/" + room;
 		var message = 'json='+JSON.stringify(msgobj);
 		$.ajax({
 			type: 'POST',
 			url: path,
-			data: msgdata
+			data: message
 		});
 		$("#msg").attr('value','');
 		$("#msg").focus();
@@ -19,12 +40,20 @@ $(document).ready(function(){
 	});
 });
 
+$(window).focus(function() {
+	allowNotifications = false;
+});
+
+$(window).blur(function() {
+	allowNotifications = true;
+});
+
 $(window).load(function() {
 	$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
 });
 
 function create_channel(room) {
-	var msgobj = {};
+	msgobj = {};
 	msgobj.type = "system";
 	msgobj.content = {};
 	msgobj.content.room = room;
@@ -63,11 +92,26 @@ function init_channel(socket) {
 	};
 	
 	socket.onmessage = function(msg){
-		msgobj = JSON.parse(msg.data);
+		var msgobj = JSON.parse(msg.data);
 		switch(msgobj.type) {
 			case "chat":
 				$("#chatlog").append("<br />" + msgobj.content.text);
 				$("#chatlog").scrollTop(parseInt($("#chatlog")[0].scrollHeight));
+				if (notifications && allowNotifications && window.webkitNotifications.checkPermission() == 0) {
+					//do stuff
+					var notification = webkitNotifications.createNotification(
+						'../../img/icon.png',
+						'Chat',
+						'A new message has been posted to chat.'
+					);
+					notification.ondisplay = function() {
+						allowNotifications = false;
+					};
+					notification.onclose = function() {
+						allowNotifications = true;
+					};
+					notification.show();	
+				}
 				break;
 			case "alert":
 				$("#chatlog").append("<br />" + msgobj.content.text);
