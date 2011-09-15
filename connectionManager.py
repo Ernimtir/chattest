@@ -18,9 +18,7 @@ class CHandler(webapp.RequestHandler):
 		client = client_id.split(None,1)
 		room = client[0]
 		user = db.get(db.Key.from_path('Player', client[1])) # Key object from client ID used to locate corresponding datastore entry
-		user.room = room;
-		logging.info(room)
-		user.put()
+		
 		content = dict()
 		content['name'] = user.user.nickname()
 		roomquery = Player.all()
@@ -29,6 +27,9 @@ class CHandler(webapp.RequestHandler):
 			logging.info(player.user.user_id())
 			channel.send_message(" ".join([room, player.user.user_id()]), 
 				buildJSONMessage('connect', content))
+		user.room = room;
+		logging.info(room)
+		user.put()
 
 # With CHandler, manages client connection awareness
 class DCHandler(webapp.RequestHandler):
